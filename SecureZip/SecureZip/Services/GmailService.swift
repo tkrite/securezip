@@ -85,7 +85,7 @@ final class GmailService: GmailServiceProtocol {
         )
 
         // 2. 数秒待機してからパスワード通知メール送信
-        try await Task.sleep(for: .seconds(3))
+        try await Task.sleep(nanoseconds: 3_000_000_000)
         let passwordSubject = "【パスワード通知】\(subject)"
         let passwordBody = "先ほど送付したファイルのパスワードは以下の通りです。\n\nパスワード: \(password)\n\n※このメールは自動送信されています。"
         try await apiClient.sendEmail(

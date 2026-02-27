@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct SendView: View {
 
@@ -17,7 +18,6 @@ struct SendView: View {
                 Divider()
 
                 if !vm.isGmailAuthenticated {
-                    // Gmail 未連携の誘導
                     ContentUnavailableView(
                         "Gmail 連携が必要です",
                         systemImage: "envelope.badge.shield.half.filled",
@@ -34,18 +34,37 @@ struct SendView: View {
 
                             GroupBox("添付ファイル") {
                                 HStack {
-                                    Text(vm.selectedFile?.lastPathComponent ?? "ファイルが選択されていません")
-                                        .foregroundStyle(vm.selectedFile == nil ? .secondary : .primary)
+                                    if let file = vm.selectedFile {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(file.lastPathComponent)
+                                                .lineLimit(1)
+                                                .truncationMode(.middle)
+                                            Text(file.fileSizeDescription)
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    } else {
+                                        Text("ファイルが選択されていません")
+                                            .foregroundStyle(.secondary)
+                                    }
                                     Spacer()
-                                    Button("選択...") {
-                                        // TODO: NSOpenPanel でファイル選択
+                                    Button("選択...") { openFilePicker() }
+                                }
+                                .padding(4)
+                            }
+
+                            GroupBox("パスワード") {
+                                HStack {
+                                    SecureField("暗号化パスワード", text: $vm.password)
+                                    Button("生成") {
+                                        vm.generatePassword()
                                     }
                                 }
                                 .padding(4)
                             }
 
                             GroupBox("件名・本文") {
-                                VStack {
+                                VStack(alignment: .leading) {
                                     TextField("件名", text: $vm.subject)
                                     Divider()
                                     TextEditor(text: $vm.body)
@@ -55,7 +74,8 @@ struct SendView: View {
                             }
 
                             GroupBox("オプション") {
-                                Toggle("パスワードを別メールで送付する", isOn: $vm.isSeparatePasswordEnabled)
+                                Toggle("パスワードを別メールで送付する",
+                                       isOn: $vm.isSeparatePasswordEnabled)
                                     .padding(4)
                             }
 
@@ -69,13 +89,18 @@ struct SendView: View {
                             if let msg = vm.errorMessage {
                                 Text(msg).foregroundStyle(.red).font(.caption)
                             }
+
+                            if vm.isCompleted {
+                                Label("送信が完了しました", systemImage: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                            }
                         }
                         .padding()
                     }
                 }
             }
 
-            // 送信キャンセルオーバーレイ
+            // 送信カウントダウン・送信中オーバーレイ
             if vm.isCountingDown || vm.isSending {
                 CancelOverlayView(
                     countdown: vm.countdown,
@@ -84,6 +109,19 @@ struct SendView: View {
                     vm.cancelSending()
                 }
             }
+        }
+    }
+
+    // MARK: - Private
+
+    private func openFilePicker() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.title = "送付するファイルを選択"
+        if panel.runModal() == .OK {
+            vm.selectedFile = panel.url
         }
     }
 }

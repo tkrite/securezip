@@ -52,7 +52,7 @@ final class SendViewModel {
             for remaining in stride(from: cancelDelaySeconds, through: 1, by: -1) {
                 try Task.checkCancellation()
                 await MainActor.run { countdown = remaining }
-                try await Task.sleep(for: .seconds(1))
+                try await Task.sleep(nanoseconds: 1_000_000_000)
             }
             try Task.checkCancellation()
             await MainActor.run {
@@ -83,6 +83,16 @@ final class SendViewModel {
         isCountingDown = false
         isSending = false
         countdown = 0
+    }
+
+    func generatePassword() {
+        password = PasswordService().generatePassword(
+            length: PasswordService.defaultLength,
+            includeUppercase: true,
+            includeLowercase: true,
+            includeNumbers: true,
+            includeSymbols: true
+        )
     }
 
     // MARK: - Private

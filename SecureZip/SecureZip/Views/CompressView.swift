@@ -1,10 +1,11 @@
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 
 struct CompressView: View {
 
     @State private var vm = CompressViewModel()
     @State private var showPasswordGenerator = false
-    @State private var showSavePanel = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -53,9 +54,10 @@ struct CompressView: View {
                                         .onChange(of: vm.password) { _, _ in
                                             vm.updatePasswordStrength()
                                         }
-                                    Button("自動生成") { vm.generatePassword() }
+                                    Button("自動生成") {
+                                        showPasswordGenerator = true
+                                    }
                                 }
-                                // 強度インジケーター
                                 HStack {
                                     Image(systemName: vm.passwordStrength.symbolName)
                                     Text(vm.passwordStrength.displayName)
@@ -71,7 +73,7 @@ struct CompressView: View {
                     HStack {
                         Spacer()
                         Button("圧縮する") {
-                            showSavePanel = true
+                            openSavePanel()
                         }
                         .buttonStyle(.borderedProminent)
                         .disabled(!vm.canCompress || vm.isCompressing)
@@ -80,6 +82,20 @@ struct CompressView: View {
                     // 進捗
                     if vm.isCompressing {
                         ProgressView(value: vm.progress)
+                    }
+
+                    // 完了通知
+                    if let outputURL = vm.outputURL {
+                        HStack {
+                            Label("圧縮完了: \(outputURL.lastPathComponent)",
+                                  systemImage: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                            Spacer()
+                            Button("Finder で表示") {
+                                NSWorkspace.shared.activateFileViewerSelecting([outputURL])
+                            }
+                            .buttonStyle(.borderless)
+                        }
                     }
 
                     // エラー
@@ -92,15 +108,20 @@ struct CompressView: View {
                 .padding()
             }
         }
-        .fileExporter(
-            isPresented: $showSavePanel,
-            document: nil as URL?,
-            contentType: .zip,
-            defaultFilename: "archive"
-        ) { result in
-            if case .success(let url) = result {
-                Task { await vm.compress(destination: url) }
-            }
+        .sheet(isPresented: $showPasswordGenerator) {
+            PasswordGeneratorSheet(password: $vm.password)
+        }
+    }
+
+    // MARK: - Private
+
+    private func openSavePanel() {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "archive.\(vm.format.fileExtension)"
+        panel.canCreateDirectories = true
+        panel.title = "圧縮ファイルの保存先を選択"
+        if panel.runModal() == .OK, let url = panel.url {
+            Task { await vm.compress(destination: url) }
         }
     }
 }

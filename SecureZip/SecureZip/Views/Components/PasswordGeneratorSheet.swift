@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// パスワード生成シート
 struct PasswordGeneratorSheet: View {

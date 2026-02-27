@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct DecompressView: View {
 
@@ -22,10 +23,10 @@ struct DecompressView: View {
                     HStack {
                         Text(vm.selectedFile?.lastPathComponent ?? "ファイルが選択されていません")
                             .foregroundStyle(vm.selectedFile == nil ? .secondary : .primary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
                         Spacer()
-                        Button("選択...") {
-                            // TODO: NSOpenPanel でファイル選択
-                        }
+                        Button("選択...") { openFilePicker() }
                     }
                     .padding(4)
                 }
@@ -39,11 +40,9 @@ struct DecompressView: View {
                 // 実行ボタン
                 HStack {
                     Spacer()
-                    Button("解凍する") {
-                        // TODO: 解凍先フォルダ選択 → vm.decompress(destination:)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(!vm.canDecompress || vm.isDecompressing)
+                    Button("解凍する") { openFolderPicker() }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(!vm.canDecompress || vm.isDecompressing)
                 }
 
                 if vm.isDecompressing {
@@ -62,6 +61,34 @@ struct DecompressView: View {
             .padding()
 
             Spacer()
+        }
+    }
+
+    // MARK: - Private
+
+    /// 解凍対象ファイルを選択する
+    private func openFilePicker() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.title = "解凍するファイルを選択"
+        panel.allowedContentTypes = []  // 全形式を許可
+        if panel.runModal() == .OK {
+            vm.selectedFile = panel.url
+        }
+    }
+
+    /// 解凍先フォルダを選択して解凍を開始する
+    private func openFolderPicker() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.title = "解凍先フォルダを選択"
+        if panel.runModal() == .OK, let url = panel.url {
+            Task { await vm.decompress(destination: url) }
         }
     }
 }
