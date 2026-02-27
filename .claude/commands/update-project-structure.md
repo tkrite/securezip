@@ -1,0 +1,1 @@
+project-manager エージェントがコードベース全体を分析してプロジェクト構成との不整合を確認し、document-writer エージェントが ./.claude/templates/project-structure-template.md を使用して本日の日付で ./Documents/project_structure/YYYY-MM-DD_vX.Y\_[description].md を作成し、project-manager エージェントが確認後 ./Documents/PROJECT_STRUCTURE.md へのシンボリックリンクを変更してください。

@@ -1,0 +1,1 @@
+/Users/akanemurakami/Documents/AppDev/file_comp/project-main/Documents/project_structure/2026-02-27_v1.0_initial.md

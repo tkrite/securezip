@@ -1,0 +1,524 @@
+################################################################################
+# マルチエージェント開発環境用 .gitignore
+# Git Worktree + Claude Code環境に最適化
+################################################################################
+
+#===============================================================================
+# Claude Code 関連
+#===============================================================================
+# Claude Code設定は共有するため、.claudeディレクトリは除外しない
+# ただし、ローカル固有の設定がある場合は以下に追加
+.claude/local/
+.claude/*.local.*
+.claude/.cache/
+
+#===============================================================================
+# マルチエージェント開発 - ログ・作業ファイル
+#===============================================================================
+# 個人作業ログ（日付付きログは保持、個人メモは除外）
+Documents/logs/development/*.tmp
+Documents/logs/development/*.draft
+Documents/logs/development/*.personal
+Documents/logs/amendment/*.tmp
+Documents/logs/amendment/*.draft
+
+# エージェント一時ファイル
+Documents/analysis/*.tmp
+Documents/analysis/*.working
+Documents/analysis/.cache/
+
+# マージコンフリクトバックアップ
+*.orig
+*.rej
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+
+# Worktree固有の一時ファイル
+.worktree-*
+*.worktree-lock
+
+#===============================================================================
+# IDE / エディタ
+#===============================================================================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+.history/
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+*~
+tags
+[._]*.un~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+.org-id-locations
+*_archive
+*_flymake.*
+/eshell/history
+/eshell/lastdir
+/elpa/
+*.rel
+/auto/
+.cask/
+dist/
+flycheck_*.el
+/server/
+.projectile
+.dir-locals.el
+/network-security.data
+
+#===============================================================================
+# OS固有ファイル
+#===============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+#===============================================================================
+# Python
+#===============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask
+instance/
+.webassets-cache
+
+# Scrapy
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# mkdocs
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# pytype
+.pytype/
+
+# Cython
+cython_debug/
+
+#===============================================================================
+# Node.js / JavaScript / TypeScript
+#===============================================================================
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Directory for instrumented libs
+lib-cov
+
+# Coverage
+coverage
+*.lcov
+.nyc_output
+
+# Grunt
+.grunt
+
+# Bower
+bower_components
+
+# node-waf
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# TypeScript
+*.tsbuildinfo
+typings/
+
+# npm
+.npm
+
+# eslint
+.eslintcache
+
+# stylelint
+.stylelintcache
+
+# Microbundle
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# REPL
+.node_repl_history
+
+# Yarn
+.yarn-integrity
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# parcel-bundler
+.cache
+.parcel-cache
+
+# Next.js
+.next
+out
+
+# Nuxt.js
+.nuxt
+dist
+
+# Gatsby
+.cache/
+public
+
+# vuepress
+.vuepress/dist
+
+# vuepress v2.x temp
+.temp
+
+# Docusaurus
+.docusaurus
+
+# Serverless
+.serverless/
+
+# FuseBox
+.fusebox/
+
+# DynamoDB
+.dynamodb/
+
+# TernJS
+.tern-port
+
+# Stores VSCode versions
+.vscode-test
+
+# Yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+#===============================================================================
+# アプリケーション固有
+#===============================================================================
+# データベース
+*.db
+*.sqlite
+*.sqlite3
+data/
+database/
+
+# メディアファイル（必要に応じてコメントアウト）
+*.wav
+*.mp3
+*.mp4
+*.avi
+*.mov
+audio_files/
+video_files/
+uploads/
+
+# 機密情報
+secrets/
+credentials/
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# バックアップ
+*.bak
+*.backup
+*.old
+backup/
+backups/
+
+# キャッシュ
+cache/
+.cache/
+tmp/
+temp/
+*.tmp
+
+# ビルド成果物
+build/
+dist/
+out/
+output/
+bin/
+obj/
+
+#===============================================================================
+# テスト関連
+#===============================================================================
+# テスト結果（保持したい場合はコメントアウト）
+# Documents/test_results/*.xml
+# Documents/test_results/*.json
+
+# テスト用一時ファイル
+test-results/
+test-output/
+*.test.tmp
+*.spec.tmp
+
+#===============================================================================
+# Git Worktree 特有の除外
+#===============================================================================
+# Worktree作成時の一時ファイル
+.git-worktree-*
+
+# 各Worktreeのローカル設定
+.worktree-config
+*.worktree.local
+
+#===============================================================================
+# サンプルディレクトリ関連
+#===============================================================================
+# samplesディレクトリへのシンボリックリンク（使用する場合）
+samples-link
+samples-link/
+
+# ローカルにコピーしたサンプル
+Documents/samples/*.local.*
+Documents/samples/temp/
+
+#===============================================================================
+# プロジェクト固有の追加設定
+#===============================================================================
+# 以下にプロジェクト固有の除外パターンを追加
+
+#===============================================================================
+# SecureZip - Xcode / Swift プロジェクト
+#===============================================================================
+# Google OAuth 設定ファイル（機密情報を含むため除外）
+SecureZip/SecureZip/Resources/GoogleService-Info.plist
+**/GoogleService-Info.plist
+
+# Xcode ビルド成果物・派生データ
+SecureZip/*.xcodeproj/xcuserdata/
+SecureZip/*.xcodeproj/project.xcworkspace/xcuserdata/
+SecureZip/*.xcworkspace/xcuserdata/
+SecureZip/DerivedData/
+SecureZip/*.xcscmblueprint
+SecureZip/*.xccheckout
+SecureZip/build/
+
+# Swift Package Manager キャッシュ
+SecureZip/.build/
+SecureZip/.swiftpm/
+
+# Xcode ユーザー固有設定
+*.xcuserstate
+*.xcuserdatad/
+
+# Archive / Export
+SecureZip/*.xcarchive
+SecureZip/ExportOptions.plist

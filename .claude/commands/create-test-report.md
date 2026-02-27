@@ -1,0 +1,1 @@
+test-engineer が $0 のテストを行い、document-writer が ./.claude/templates/test-results-template.md を使用してテスト結果のレポートを作成し lead-developer がレビューおよび修正を行った後、 type を定義して、本日の日付で ./Documents/test_results/YYYY-MM-DD_test-[type].md に保存してください。

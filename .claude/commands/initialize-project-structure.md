@@ -1,0 +1,1 @@
+project-manager が ./Documents/requirements/requirements_definition.md と ./Documents/requirements/technical_specification.md を分析してプロジェクト構成を検討し、document-writer が ./.claude/templates/project-structure-template.md を使用して本日の日付で ./Documents/project_structure/YYYY-MM-DD_v1.0_initial.md を作成し、project-manager が確認後 ./Documents/PROJECT_STRUCTURE.md へのシンボリックリンクを作成してください。

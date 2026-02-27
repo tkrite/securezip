@@ -1,0 +1,1 @@
+document-writer が ./.claude/templates/log-fix-template.md を使用して修正ログを作成し、debugger がレビューを行い内容を修正し、　その後 lead-developer がレビューおよび修正を行った後、 issue を定義して、本日の日付で ./Documents/logs/amendment/YYYY-MM-DD_fix-[issue].md に保存してください。

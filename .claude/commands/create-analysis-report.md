@@ -1,0 +1,1 @@
+data-scientist が $0 に関する分析を行い、document-writer が ./.claude/templates/code-analysis-template.md を使用して分析レポートを作成し lead-developer がレビューおよび修正を行った後、 本日の日付で ./Documents/analysis/YYYY-MM-DD_analysis.md に保存してください。

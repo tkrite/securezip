@@ -1,0 +1,1 @@
+project-manager エージェントが ./Documents/PROJECT_STRUCTURE.md を確認し、リンク先のファイルを確認。情報の肥大化、冗長度合いを確認し、内容をリファクタリングする。整理された内容を document-writer エージェントが ./.claude/templates/project-structure-template.md を使用して ./Documents/project_structure/元のファイル名\_refactor.md を作成し、project-manager エージェントが確認後 ./Documents/PROJECT_STRUCTURE.md へのシンボリックリンクを変更してください。
