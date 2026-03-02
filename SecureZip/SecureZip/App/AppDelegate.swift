@@ -1,6 +1,7 @@
 import AppKit
 
 /// URLスキームコールバック（OAuth認証後のリダイレクト）を処理する
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private let autoDeleteService = AutoDeleteService()
