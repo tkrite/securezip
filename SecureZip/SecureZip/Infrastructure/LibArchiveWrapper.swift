@@ -109,10 +109,9 @@ final class LibArchiveWrapper {
         progress(0.1)
 
         if let password = password, !password.isEmpty {
-            // AES-256 暗号化 ZIP：zip コマンドを使用
-            // -e: 暗号化（ZipCrypto デフォルト）
-            // --password オプションはインタラクティブのため、expect 経由で実行
-            // セキュアな実装: Python の zipfile モジュール or 将来的に libarchive C API で置き換え
+            // パスワード保護 ZIP（ZipCrypto 暗号化）
+            // パスワードは stdin 経由で渡し、プロセス引数リストへの露出を防ぐ
+            // AES-256 対応は Phase 2 で libarchive C API により実装予定
             try await compressZipEncrypted(
                 sources: sources, destination: destination,
                 password: password, progress: progress
@@ -132,30 +131,19 @@ final class LibArchiveWrapper {
         password: String,
         progress: @escaping @Sendable (Double) -> Void
     ) async throws {
-        // Python の zipfile + pyzipper を使うか、将来的に libarchive C API で AES-256 を実装
-        // 現段階では Python の標準 zipfile で ZipCrypto 暗号化を行う
-        // （AES-256 は pyzipper が必要なため libarchive 実装まで ZipCrypto で代替）
-        let script = """
-        import zipfile, sys, os
-        src_paths = sys.argv[1:-2]
-        dst = sys.argv[-2]
-        pwd = sys.argv[-1]
-        with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as zf:
-            zf.setpassword(pwd.encode())
-            for src in src_paths:
-                if os.path.isdir(src):
-                    for root, dirs, files in os.walk(src):
-                        for f in files:
-                            fp = os.path.join(root, f)
-                            zf.write(fp, os.path.relpath(fp, os.path.dirname(src)))
-                else:
-                    zf.write(src, os.path.basename(src))
-        """
-        var args = ["-c", script]
+        // /usr/bin/zip -e はパスワード入力を対話的に2回要求するため、
+        // "password\npassword\n" を stdin 経由で渡す。
+        // コマンドライン引数にパスワードを含めないことで `ps aux` への露出を防ぐ。
+        // 暗号化方式: ZipCrypto（AES-256 は Phase 2 で libarchive C API により対応予定）
+        var args = ["-r", "-e", destination.path]
         args += sources.map { $0.path }
-        args.append(destination.path)
-        args.append(password)
-        try await runProcess(executable: "/usr/bin/python3", arguments: args, progress: progress)
+        let passwordInput = Data("\(password)\n\(password)\n".utf8)
+        try await runProcess(
+            executable: "/usr/bin/zip",
+            arguments: args,
+            stdinData: passwordInput,
+            progress: progress
+        )
     }
 
     private func decompressZip(
@@ -210,6 +198,7 @@ final class LibArchiveWrapper {
     private func runProcess(
         executable: String,
         arguments: [String],
+        stdinData: Data? = nil,
         progress: @escaping @Sendable (Double) -> Void
     ) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -221,8 +210,25 @@ final class LibArchiveWrapper {
                 let errorPipe = Pipe()
                 process.standardError = errorPipe
 
+                // stdin 経由でデータを渡す場合はプロセス起動前に Pipe をセットする
+                let inputPipe: Pipe?
+                if stdinData != nil {
+                    let pipe = Pipe()
+                    process.standardInput = pipe
+                    inputPipe = pipe
+                } else {
+                    inputPipe = nil
+                }
+
                 do {
                     try process.run()
+
+                    // プロセス起動後に stdin へ書き込んでクローズする
+                    if let data = stdinData, let pipe = inputPipe {
+                        pipe.fileHandleForWriting.write(data)
+                        pipe.fileHandleForWriting.closeFile()
+                    }
+
                     process.waitUntilExit()
 
                     if process.terminationStatus == 0 {

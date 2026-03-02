@@ -43,7 +43,8 @@ final class GmailService: GmailServiceProtocol {
         // 1. GoogleSignIn.sharedInstance.signIn() を呼び出す
         // 2. トークンを Keychain に保存
         // 3. isAuthenticated = true にセット
-        isAuthenticated = true
+        // OAuth 実装が完了するまでは未実装として明示的にエラーをスローする
+        throw SecureZipError.gmailNotAuthenticated
     }
 
     /// Gmail 連携を解除する

@@ -31,6 +31,10 @@ final class SettingsViewModel {
 
     var postCompressionAction: PostCompressionAction = .keep
 
+    // MARK: - Error
+
+    var errorMessage: String?
+
     // MARK: - Dependencies
 
     private let gmailService: GmailServiceProtocol
@@ -43,21 +47,23 @@ final class SettingsViewModel {
     // MARK: - Actions
 
     func connectGmail() async {
+        errorMessage = nil
         do {
             try await gmailService.authenticate()
             isGmailConnected = gmailService.isAuthenticated
         } catch {
-            // TODO: エラー表示
+            errorMessage = error.localizedDescription
         }
     }
 
     func disconnectGmail() async {
+        errorMessage = nil
         do {
             try await gmailService.disconnect()
             isGmailConnected = false
             connectedEmail = ""
         } catch {
-            // TODO: エラー表示
+            errorMessage = error.localizedDescription
         }
     }
 }

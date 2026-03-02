@@ -37,7 +37,7 @@ struct CompressView: View {
                     }
 
                     // 暗号化
-                    GroupBox("AES-256 暗号化") {
+                    GroupBox("パスワード保護 (ZipCrypto)") {
                         VStack(alignment: .leading, spacing: 8) {
                             Toggle("暗号化を有効にする", isOn: $vm.isEncryptionEnabled)
                                 .disabled(!vm.format.supportsEncryption)

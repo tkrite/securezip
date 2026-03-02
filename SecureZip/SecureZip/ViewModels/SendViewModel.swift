@@ -48,30 +48,47 @@ final class SendViewModel {
         countdown = cancelDelaySeconds
 
         sendTask = Task {
-            // カウントダウン
-            for remaining in stride(from: cancelDelaySeconds, through: 1, by: -1) {
+            // カウントダウン（キャンセル・エラーは早期リターン）
+            do {
+                for remaining in stride(from: cancelDelaySeconds, through: 1, by: -1) {
+                    try Task.checkCancellation()
+                    await MainActor.run { countdown = remaining }
+                    try await Task.sleep(nanoseconds: 1_000_000_000)
+                }
                 try Task.checkCancellation()
-                await MainActor.run { countdown = remaining }
-                try await Task.sleep(nanoseconds: 1_000_000_000)
+            } catch {
+                await MainActor.run {
+                    isCountingDown = false
+                    countdown = 0
+                }
+                return
             }
-            try Task.checkCancellation()
+
             await MainActor.run {
                 isCountingDown = false
                 isSending = true
             }
 
-            // 送信実行
-            try await gmailService.sendWithSeparatePassword(
-                file: file,
-                password: password,
-                recipient: recipientEmail,
-                subject: subject.isEmpty ? "ファイルを送付します" : subject,
-                body: body
-            )
-
-            await MainActor.run {
-                isSending = false
-                isCompleted = true
+            // 送信実行：エラー・キャンセルいずれの場合も isSending を false にリセットする
+            do {
+                try await gmailService.sendWithSeparatePassword(
+                    file: file,
+                    password: password,
+                    recipient: recipientEmail,
+                    subject: subject.isEmpty ? "ファイルを送付します" : subject,
+                    body: body
+                )
+                await MainActor.run {
+                    isSending = false
+                    isCompleted = true
+                }
+            } catch is CancellationError {
+                await MainActor.run { isSending = false }
+            } catch {
+                await MainActor.run {
+                    isSending = false
+                    errorMessage = error.localizedDescription
+                }
             }
         }
     }

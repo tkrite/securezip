@@ -29,6 +29,11 @@ struct SettingsView: View {
                         }
                         .buttonStyle(.borderedProminent)
                     }
+                    if let msg = vm.errorMessage {
+                        Text(msg)
+                            .foregroundStyle(.red)
+                            .font(.caption)
+                    }
                 }
 
                 // パスワード生成設定
