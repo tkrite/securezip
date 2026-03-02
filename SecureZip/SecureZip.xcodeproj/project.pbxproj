@@ -19,9 +19,22 @@
 		D542533A2F55804700D1887D /* SecureZip.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = SecureZip.xcdatamodel; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D54253402F558A0000D1887D /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Info.plist",
+			);
+			target = D54252CE2F557B0B00D1887D /* SecureZip */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D54252D12F557B0B00D1887D /* SecureZip */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D54253402F558A0000D1887D /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+			);
 			path = SecureZip;
 			sourceTree = "<group>";
 		};
