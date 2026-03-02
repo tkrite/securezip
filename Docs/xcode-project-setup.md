@@ -35,7 +35,24 @@ SecureZip/
 | Language | `Swift` |
 | Storage | `None`（CoreData は手動設定） |
 
-4. 保存先として `SecureZip/` ディレクトリと **同じ階層** を選択
+4. 保存先として **既存の `SecureZip/` フォルダの「中」** を選択
+
+   > ⚠️ **ポイント**: `project-main/` を選ぶと既存の `SecureZip/` フォルダと名前が衝突してXcodeが削除しようとします。
+   > 必ず `project-main/SecureZip/` フォルダの**中へ移動してから**「Create」を押してください。
+   >
+   > ```
+   > 正しい保存先: project-main/SecureZip/  ← フォルダの中に入る
+   >
+   > 結果:
+   > project-main/
+   > └── SecureZip/
+   >     ├── SecureZip.xcodeproj   ← ここに生成される
+   >     ├── Package.swift
+   >     ├── SecureZip/            ← 既存ソース（変更なし）
+   >     └── SecureZipTests/
+   > ```
+   >
+   > Xcode がテンプレートファイル（`ContentView.swift` 等）を自動生成した場合は削除してください。
 
 ---
 
