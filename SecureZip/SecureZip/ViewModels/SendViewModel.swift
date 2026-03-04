@@ -1,34 +1,36 @@
 import Foundation
-import Observation
+import Combine
 
-@Observable
-final class SendViewModel {
+final class SendViewModel: ObservableObject {
 
     // MARK: - State
 
-    var recipientEmail: String = ""
-    var subject: String = ""
-    var body: String = ""
-    var selectedFile: URL?
-    var password: String = ""
-    var isSeparatePasswordEnabled: Bool = true
-    var cancelDelaySeconds: Int = 5
-    var countdown: Int = 0
-    var isSending: Bool = false
-    var isCountingDown: Bool = false
-    var errorMessage: String?
-    var isCompleted: Bool = false
+    @Published var recipientEmail: String = ""
+    @Published var subject: String = ""
+    @Published var body: String = ""
+    @Published var selectedFile: URL?
+    @Published var password: String = ""
+    @Published var isSeparatePasswordEnabled: Bool = true
+    @Published var cancelDelaySeconds: Int = 5
+    @Published var countdown: Int = 0
+    @Published var isSending: Bool = false
+    @Published var isCountingDown: Bool = false
+    @Published var errorMessage: String?
+    @Published var isCompleted: Bool = false
 
     // MARK: - Dependencies
 
     private let gmailService: GmailServiceProtocol
     private let passwordService: PasswordServiceProtocol
+    private let historyService: HistoryServiceProtocol
     private var sendTask: Task<Void, Error>?
 
     init(gmailService: GmailServiceProtocol = GmailService(),
-         passwordService: PasswordServiceProtocol = PasswordService()) {
+         passwordService: PasswordServiceProtocol = PasswordService(),
+         historyService: HistoryServiceProtocol = HistoryService()) {
         self.gmailService = gmailService
         self.passwordService = passwordService
+        self.historyService = historyService
     }
 
     var isGmailAuthenticated: Bool { gmailService.isAuthenticated }
@@ -86,6 +88,22 @@ final class SendViewModel {
                     isSending = false
                     isCompleted = true
                 }
+                // 送信成功後に履歴を保存（失敗しても送信完了扱いとする）
+                let fileSize = (try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize).flatMap { Int64($0) } ?? 0
+                let historyItem = HistoryItem(
+                    id: UUID(),
+                    recipientEmail: recipientEmail,
+                    fileName: file.lastPathComponent,
+                    originalFileNames: [file.lastPathComponent],
+                    fileSize: fileSize,
+                    format: .zip,
+                    isEncrypted: !password.isEmpty,
+                    sentAt: Date(),
+                    expiresAt: Calendar.current.date(byAdding: .day, value: 30, to: Date()),
+                    status: .sent,
+                    createdAt: Date()
+                )
+                try? await historyService.save(historyItem)
             } catch is CancellationError {
                 await MainActor.run { isSending = false }
             } catch {

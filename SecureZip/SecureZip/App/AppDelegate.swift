@@ -1,13 +1,21 @@
 import AppKit
+import GoogleSignIn
 
 /// URLスキームコールバック（OAuth認証後のリダイレクト）を処理する
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
-    private let autoDeleteService = AutoDeleteService()
+    private lazy var autoDeleteService = AutoDeleteService()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         autoDeleteService.startScheduler()
+        // 既存の Google サインイン状態を復元
+        GIDSignIn.sharedInstance.restorePreviousSignIn { user, _ in
+            NotificationCenter.default.post(
+                name: .gmailAuthStateChanged,
+                object: user != nil
+            )
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -15,17 +23,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        // Google OAuth コールバック URL の処理
-        // GTMAppAuth がトークン交換を行う
         for url in urls {
-            NotificationCenter.default.post(
-                name: .oauthCallbackReceived,
-                object: url
-            )
+            GIDSignIn.sharedInstance.handle(url)
         }
     }
 }
 
 extension Notification.Name {
-    static let oauthCallbackReceived = Notification.Name("oauthCallbackReceived")
+    static let gmailAuthStateChanged = Notification.Name("gmailAuthStateChanged")
 }

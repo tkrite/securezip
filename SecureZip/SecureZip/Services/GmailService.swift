@@ -1,4 +1,6 @@
+import AppKit
 import Foundation
+import GoogleSignIn
 
 // MARK: - Protocol
 
@@ -20,8 +22,8 @@ protocol GmailServiceProtocol {
 
 /// Gmail API 連携によるメール送信サービス
 ///
-/// OAuth 2.0 + PKCE で認証し、gmail.send スコープのみで動作する。
-/// GTMAppAuth によるトークン自動リフレッシュに対応。
+/// OAuth 2.0 で認証し、gmail.send スコープのみで動作する。
+/// GoogleSignIn SDK によるトークン管理に対応。
 final class GmailService: GmailServiceProtocol {
 
     static let gmailSendScope = "https://www.googleapis.com/auth/gmail.send"
@@ -30,7 +32,9 @@ final class GmailService: GmailServiceProtocol {
     private let apiClient: GmailAPIClient
     private let keychainService: KeychainServiceProtocol
 
-    private(set) var isAuthenticated: Bool = false
+    var isAuthenticated: Bool {
+        GIDSignIn.sharedInstance.currentUser != nil
+    }
 
     init(apiClient: GmailAPIClient = GmailAPIClient(),
          keychainService: KeychainServiceProtocol = KeychainService()) {
@@ -38,23 +42,43 @@ final class GmailService: GmailServiceProtocol {
         self.keychainService = keychainService
     }
 
-    /// Gmail OAuth 認証を開始する（Safari 経由でブラウザを開く）
+    /// Gmail OAuth 認証を開始する
     func authenticate() async throws {
-        // TODO: Google Sign-In SDK を使用した OAuth 2.0 + PKCE 認証フローを実装
-        // 1. GoogleSignIn.sharedInstance.signIn() を呼び出す
-        // 2. トークンを Keychain に保存
-        // 3. isAuthenticated = true にセット
-        // OAuth 実装が完了するまでは未実装として明示的にエラーをスローする
-        throw SecureZipError.gmailNotAuthenticated
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            DispatchQueue.main.async {
+                guard let window = NSApplication.shared.keyWindow else {
+                    continuation.resume(throwing: SecureZipError.gmailNotAuthenticated)
+                    return
+                }
+                GIDSignIn.sharedInstance.signIn(
+                    withPresenting: window,
+                    hint: nil,
+                    additionalScopes: [Self.gmailSendScope]
+                ) { result, error in
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                        return
+                    }
+                    do {
+                        if let user = GIDSignIn.sharedInstance.currentUser,
+                           let tokenData = user.accessToken.tokenString.data(using: .utf8) {
+                            // KeychainService はステートレスなので毎回インスタンス化して安全に使用できる
+                            try KeychainService().save(tokenData, for: KeychainKey.gmailAccessToken.rawValue)
+                        }
+                        continuation.resume()
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+        }
     }
 
     /// Gmail 連携を解除する
     func disconnect() async throws {
-        // TODO: Google Sign-In SDK のサインアウト処理を実装
-        // トークンを Keychain から削除
+        GIDSignIn.sharedInstance.signOut()
         try keychainService.delete(for: KeychainKey.gmailAccessToken.rawValue)
         try keychainService.delete(for: KeychainKey.gmailRefreshToken.rawValue)
-        isAuthenticated = false
     }
 
     /// 暗号化ファイルを送信する
@@ -99,4 +123,5 @@ final class GmailService: GmailServiceProtocol {
             attachment: nil
         )
     }
+
 }

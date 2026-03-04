@@ -1,9 +1,10 @@
 import Foundation
+import GoogleSignIn
 
 /// Gmail REST API クライアント
 ///
 /// MIME メッセージを Base64URL エンコードして Gmail API に送信する。
-/// アクセストークンは Keychain から取得する。
+/// アクセストークンは Keychain から取得し、401 時はトークンをリフレッシュして1回リトライする。
 final class GmailAPIClient {
 
     private let session: URLSession
@@ -39,14 +40,34 @@ final class GmailAPIClient {
         let mimeData = try buildMIMEMessage(to: recipient, subject: subject, body: body, attachment: attachment)
         let rawMessage = mimeData.base64URLEncoded
 
-        // リクエストを構築
+        let statusCode = try await performRequest(rawMessage: rawMessage, token: token)
+
+        if statusCode == 401 {
+            // トークンをリフレッシュして1回だけリトライ
+            let newToken = try await refreshAccessToken()
+            let retryStatus = try await performRequest(rawMessage: rawMessage, token: newToken)
+            if retryStatus == 401 {
+                throw SecureZipError.gmailSendFailed(
+                    statusCode: 401,
+                    message: "認証が失効しています。設定画面から再連携してください。"
+                )
+            } else if retryStatus < 200 || retryStatus > 299 {
+                throw SecureZipError.gmailSendFailed(statusCode: retryStatus, message: "メール送信に失敗しました")
+            }
+        }
+    }
+
+    // MARK: - Private Helpers
+
+    /// リクエストを送信し HTTP ステータスコードを返す
+    @discardableResult
+    private func performRequest(rawMessage: String, token: String) async throws -> Int {
         var request = URLRequest(url: Self.sendEndpoint)
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: ["raw": rawMessage])
 
-        // Gmail API へ送信
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw SecureZipError.gmailSendFailed(statusCode: 0, message: "レスポンスが不正です")
@@ -54,12 +75,9 @@ final class GmailAPIClient {
 
         switch httpResponse.statusCode {
         case 200...299:
-            return  // 送信成功
+            return httpResponse.statusCode
         case 401:
-            throw SecureZipError.gmailSendFailed(
-                statusCode: 401,
-                message: "認証が失効しています。設定画面から再連携してください。"
-            )
+            return 401
         case 429:
             throw SecureZipError.gmailSendFailed(
                 statusCode: 429,
@@ -71,7 +89,35 @@ final class GmailAPIClient {
         }
     }
 
-    // MARK: - Private Helpers
+    /// GIDGoogleUser のトークンをリフレッシュし、新しいアクセストークンを Keychain に保存して返す
+    private func refreshAccessToken() async throws -> String {
+        guard let user = GIDSignIn.sharedInstance.currentUser else {
+            throw SecureZipError.gmailSendFailed(
+                statusCode: 401,
+                message: "認証が失効しています。設定画面から再連携してください。"
+            )
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            user.refreshTokensIfNeeded { updatedUser, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                guard let newToken = updatedUser?.accessToken.tokenString else {
+                    continuation.resume(throwing: SecureZipError.gmailSendFailed(
+                        statusCode: 401,
+                        message: "認証トークンの更新に失敗しました"
+                    ))
+                    return
+                }
+                if let tokenData = newToken.data(using: .utf8) {
+                    try? KeychainService().save(tokenData, for: KeychainKey.gmailAccessToken.rawValue)
+                }
+                continuation.resume(returning: newToken)
+            }
+        }
+    }
 
     /// RFC 2822 形式の MIME メッセージを構築する
     private func buildMIMEMessage(

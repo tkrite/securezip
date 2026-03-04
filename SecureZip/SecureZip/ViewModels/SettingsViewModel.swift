@@ -1,39 +1,39 @@
 import Foundation
-import Observation
+import Combine
+import GoogleSignIn
 
-@Observable
-final class SettingsViewModel {
+final class SettingsViewModel: ObservableObject {
 
     // MARK: - Gmail
 
-    var isGmailConnected: Bool = false
-    var connectedEmail: String = ""
+    @Published var isGmailConnected: Bool = false
+    @Published var connectedEmail: String = ""
 
     // MARK: - Password
 
-    var passwordLength: Int = 16
-    var includeUppercase: Bool = true
-    var includeLowercase: Bool = true
-    var includeNumbers: Bool = true
-    var includeSymbols: Bool = true
+    @Published var passwordLength: Int = 16
+    @Published var includeUppercase: Bool = true
+    @Published var includeLowercase: Bool = true
+    @Published var includeNumbers: Bool = true
+    @Published var includeSymbols: Bool = true
 
     // MARK: - AutoDelete
 
-    var isAutoDeleteEnabled: Bool = true
-    var autoDeleteDays: Int = 30
+    @Published var isAutoDeleteEnabled: Bool = true
+    @Published var autoDeleteDays: Int = 30
 
     // MARK: - Send
 
-    var cancelDelaySeconds: Int = 5
-    var separatePasswordByDefault: Bool = true
+    @Published var cancelDelaySeconds: Int = 5
+    @Published var separatePasswordByDefault: Bool = true
 
     // MARK: - PostCompression
 
-    var postCompressionAction: PostCompressionAction = .keep
+    @Published var postCompressionAction: PostCompressionAction = .keep
 
     // MARK: - Error
 
-    var errorMessage: String?
+    @Published var errorMessage: String?
 
     // MARK: - Dependencies
 
@@ -42,6 +42,7 @@ final class SettingsViewModel {
     init(gmailService: GmailServiceProtocol = GmailService()) {
         self.gmailService = gmailService
         self.isGmailConnected = gmailService.isAuthenticated
+        self.connectedEmail = GIDSignIn.sharedInstance.currentUser?.profile?.email ?? ""
     }
 
     // MARK: - Actions
@@ -51,6 +52,7 @@ final class SettingsViewModel {
         do {
             try await gmailService.authenticate()
             isGmailConnected = gmailService.isAuthenticated
+            connectedEmail = GIDSignIn.sharedInstance.currentUser?.profile?.email ?? ""
         } catch {
             errorMessage = error.localizedDescription
         }
