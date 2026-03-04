@@ -1,1 +1,1 @@
-/Users/akanemurakami/Documents/AppDev/file_comp/project-main/Documents/project_structure/2026-03-02_v1.1_phase1-complete.md
+/Users/akanemurakami/Documents/AppDev/file_comp/project-main/Documents/project_structure/2026-03-04_v1.2_gmail-oauth-phase2.md
