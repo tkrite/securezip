@@ -222,6 +222,10 @@ final class LibArchiveWrapper {
         password: String?,
         progress: @escaping @Sendable (Double) -> Void
     ) throws {
+        // ZIP ファイルサイズを進捗の分母に使用（取得できない場合は 0 = 進捗不明）
+        let totalCompressedSize = (try? source.resourceValues(forKeys: [.fileSizeKey]).fileSize)
+            .flatMap { Int64($0) } ?? 0
+
         guard let archive = archive_read_new() else {
             throw SecureZipError.decompressionFailed(underlying: makeArchiveError(nil))
         }
@@ -246,8 +250,6 @@ final class LibArchiveWrapper {
         let extractFlags = Int32(ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_PERM)
         archive_write_disk_set_options(disk, extractFlags)
         archive_write_disk_set_standard_lookup(disk)
-
-        progress(0.1)
 
         var entry: OpaquePointer?
         while true {
@@ -285,6 +287,13 @@ final class LibArchiveWrapper {
 
             guard archive_write_finish_entry(disk) == ARCHIVE_OK else {
                 throw SecureZipError.decompressionFailed(underlying: makeArchiveError(disk))
+            }
+
+            // 圧縮済みバイト数で進捗を更新（0〜0.95 の範囲で通知し、完了時に 1.0 を別途送出）
+            if totalCompressedSize > 0 {
+                let read = archive_filter_bytes(archive, -1)
+                let ratio = min(Double(read) / Double(totalCompressedSize), 0.95)
+                progress(ratio)
             }
         }
 
