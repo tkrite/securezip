@@ -116,6 +116,7 @@ final class SendViewModel: ObservableObject {
     }
 
     /// 送信をキャンセルする
+    @MainActor
     func cancelSending() {
         sendTask?.cancel()
         sendTask = nil

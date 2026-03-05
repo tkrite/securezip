@@ -65,7 +65,16 @@ final class HistoryService: HistoryServiceProtocol {
 
             let recipientId: UUID
             if let existing = existingRecipient {
-                recipientId = existing.value(forKey: "id") as? UUID ?? UUID()
+                guard let id = existing.value(forKey: "id") as? UUID else {
+                    throw SecureZipError.coreDataError(
+                        underlying: NSError(
+                            domain: "HistoryService",
+                            code: 1,
+                            userInfo: [NSLocalizedDescriptionKey: "RecipientEntity の id が UUID にキャストできません（データ破損の可能性）"]
+                        )
+                    )
+                }
+                recipientId = id
                 existing.setValue(Date(), forKey: "updatedAt")
             } else {
                 let newRecipient = NSManagedObject(
