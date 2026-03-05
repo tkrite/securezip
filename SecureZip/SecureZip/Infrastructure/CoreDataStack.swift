@@ -15,8 +15,17 @@ final class CoreDataStack {
 
     static let shared = CoreDataStack()
 
-    /// テスト時はインメモリストアを使用する
-    var useInMemoryStore: Bool = false
+    /// テスト用のインメモリスタックを生成する
+    ///
+    /// 各テストケースで独立したストアを持つため、`persistentContainer` 初回アクセス前に呼ぶこと。
+    static func inMemory() -> CoreDataStack {
+        let stack = CoreDataStack()
+        stack.useInMemoryStore = true
+        return stack
+    }
+
+    /// テスト時はインメモリストアを使用する（`inMemory()` ファクトリ経由でのみ変更すること）
+    private(set) var useInMemoryStore: Bool = false
 
     private init() {}
 

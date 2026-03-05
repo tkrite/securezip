@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 struct DropZoneView: View {
 
     @Binding var files: [URL]
+    @Binding var errorMessage: String?
     @State private var isDragging = false
 
     var body: some View {
@@ -49,7 +50,7 @@ struct DropZoneView: View {
         for provider in providers {
             provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { item, error in
                 if let error {
-                    print("⚠️ DropZoneView: ファイルの読み込みに失敗しました: \(error.localizedDescription)")
+                    DispatchQueue.main.async { errorMessage = "ファイルの読み込みに失敗しました: \(error.localizedDescription)" }
                     return
                 }
                 guard let data = item as? Data,

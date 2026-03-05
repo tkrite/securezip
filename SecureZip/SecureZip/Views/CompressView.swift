@@ -23,7 +23,7 @@ struct CompressView: View {
                 VStack(alignment: .leading, spacing: 20) {
 
                     // ドロップゾーン
-                    DropZoneView(files: $vm.selectedFiles)
+                    DropZoneView(files: $vm.selectedFiles, errorMessage: $vm.errorMessage)
                         .frame(height: 140)
 
                     // 圧縮形式
