@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+@MainActor
 final class CompressViewModel: ObservableObject {
 
     // MARK: - State
@@ -19,13 +20,16 @@ final class CompressViewModel: ObservableObject {
 
     private let compressionService: CompressionServiceProtocol
     private let passwordService: PasswordServiceProtocol
+    private let fileManagementService: FileManagementService
 
     init(
         compressionService: CompressionServiceProtocol = CompressionService(),
-        passwordService: PasswordServiceProtocol = PasswordService()
+        passwordService: PasswordServiceProtocol = PasswordService(),
+        fileManagementService: FileManagementService = FileManagementService()
     ) {
         self.compressionService = compressionService
         self.passwordService = passwordService
+        self.fileManagementService = fileManagementService
     }
 
     // MARK: - Actions
@@ -61,10 +65,14 @@ final class CompressViewModel: ObservableObject {
         progress = 0
         errorMessage = nil
 
+        let filesToProcess = selectedFiles
+        filesToProcess.forEach { _ = $0.startAccessingSecurityScopedResource() }
+        defer { filesToProcess.forEach { $0.stopAccessingSecurityScopedResource() } }
+
         do {
             let pw = isEncryptionEnabled ? password : nil
             try await compressionService.compress(
-                sources: selectedFiles,
+                sources: filesToProcess,
                 destination: destination,
                 format: format,
                 password: pw
@@ -72,6 +80,15 @@ final class CompressViewModel: ObservableObject {
                 Task { @MainActor in self?.progress = p }
             }
             outputURL = destination
+            password = ""
+
+            // 圧縮後に元ファイルを設定に従って処理
+            let action = PostCompressionAction(
+                rawValue: UserDefaults.standard.string(forKey: SettingsViewModel.UDKey.postCompressionAction) ?? ""
+            ) ?? .keep
+            if action != .keep {
+                try fileManagementService.handleOriginalFiles(filesToProcess, action: action)
+            }
         } catch {
             errorMessage = error.localizedDescription
         }

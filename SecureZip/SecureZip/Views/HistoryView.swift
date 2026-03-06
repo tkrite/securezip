@@ -31,24 +31,30 @@ struct HistoryView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(vm.filteredItems) { item in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(item.fileName).fontWeight(.medium)
-                            Text(item.recipientEmail)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        VStack(alignment: .trailing) {
-                            Label(item.status.displayName, systemImage: item.status.symbolName)
-                                .font(.caption)
-                            if let sentAt = item.sentAt {
-                                Text(sentAt, style: .date)
-                                    .font(.caption2)
+                List {
+                    ForEach(vm.filteredItems) { item in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(item.fileName).fontWeight(.medium)
+                                Text(item.recipientEmail)
+                                    .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
+                            Spacer()
+                            VStack(alignment: .trailing) {
+                                Label(item.status.displayName, systemImage: item.status.symbolName)
+                                    .font(.caption)
+                                if let sentAt = item.sentAt {
+                                    Text(sentAt, style: .date)
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
+                    }
+                    .onDelete { indexSet in
+                        let ids = indexSet.map { vm.filteredItems[$0].id }
+                        Task { for id in ids { await vm.deleteItem(id: id) } }
                     }
                 }
                 .searchable(text: $vm.searchText, prompt: "送付先・ファイル名で検索")

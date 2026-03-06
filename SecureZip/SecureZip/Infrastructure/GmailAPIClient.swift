@@ -8,10 +8,12 @@ import GoogleSignIn
 final class GmailAPIClient {
 
     private let session: URLSession
-    static let sendEndpoint = URL(string: "https://gmail.googleapis.com/gmail/v1/users/me/messages/send")!
+    private let sendEndpoint: URL
 
-    init(session: URLSession = .shared) {
+    init(session: URLSession = .shared,
+         sendEndpoint: URL = URL(string: "https://gmail.googleapis.com/gmail/v1/users/me/messages/send")!) {
         self.session = session
+        self.sendEndpoint = sendEndpoint
     }
 
     /// メールを送信する
@@ -34,7 +36,7 @@ final class GmailAPIClient {
         }
 
         // MIME メッセージを構築して Base64URL エンコード
-        let mimeData = try buildMIMEMessage(to: recipient, subject: subject, body: body, attachment: attachment)
+        let mimeData = try await buildMIMEMessage(to: recipient, subject: subject, body: body, attachment: attachment)
         let rawMessage = mimeData.base64URLEncoded
 
         let statusCode = try await performRequest(rawMessage: rawMessage, token: token)
@@ -48,9 +50,8 @@ final class GmailAPIClient {
                     statusCode: 401,
                     message: "認証が失効しています。設定画面から再連携してください。"
                 )
-            } else if retryStatus < 200 || retryStatus > 299 {
-                throw SecureZipError.gmailSendFailed(statusCode: retryStatus, message: "メール送信に失敗しました")
             }
+            // 200-299 以外のケースは performRequest 内でスロー済み
         }
     }
 
@@ -59,7 +60,7 @@ final class GmailAPIClient {
     /// リクエストを送信し HTTP ステータスコードを返す
     @discardableResult
     private func performRequest(rawMessage: String, token: String) async throws -> Int {
-        var request = URLRequest(url: Self.sendEndpoint)
+        var request = URLRequest(url: sendEndpoint)
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -119,7 +120,7 @@ final class GmailAPIClient {
         subject: String,
         body: String,
         attachment: URL?
-    ) throws -> Data {
+    ) async throws -> Data {
         let boundary = "SecureZip-boundary-\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
         let encodedSubject = rfc2047Encode(subject)
 
@@ -142,7 +143,9 @@ final class GmailAPIClient {
             mime += "\r\n\r\n"
 
             // --- 添付ファイルパート ---
-            let attachmentData = try Data(contentsOf: attachment)
+            let attachmentData = try await Task.detached(priority: .userInitiated) {
+                try Data(contentsOf: attachment)
+            }.value
             let encodedAttachment = attachmentData.base64EncodedString(options: [.lineLength76Characters, .endLineWithCarriageReturn])
             let encodedFilename = attachment.lastPathComponent.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? attachment.lastPathComponent
 

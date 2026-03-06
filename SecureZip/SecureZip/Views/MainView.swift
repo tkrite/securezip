@@ -9,7 +9,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var label: String {
+    var label: LocalizedStringKey {
         switch self {
         case .compress:   return "圧縮"
         case .decompress: return "解凍"

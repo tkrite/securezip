@@ -49,9 +49,18 @@ struct SettingsView: View {
                 // 送信設定
                 Section("送信設定") {
                     Stepper("キャンセル猶予: \(vm.cancelDelaySeconds)秒",
-                            value: $vm.cancelDelaySeconds, in: 1...30)
+                            value: $vm.cancelDelaySeconds, in: 1...10)
                     Toggle("デフォルトでパスワードを別送する",
                            isOn: $vm.separatePasswordByDefault)
+                }
+
+                // 圧縮後の元ファイル処理
+                Section("圧縮後の元ファイル") {
+                    Picker("処理方法", selection: $vm.postCompressionAction) {
+                        Text("保持する").tag(PostCompressionAction.keep)
+                        Text("ゴミ箱に移動").tag(PostCompressionAction.move)
+                        Text("完全削除").tag(PostCompressionAction.delete)
+                    }
                 }
 
                 // 自動削除

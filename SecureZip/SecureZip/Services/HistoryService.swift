@@ -58,45 +58,12 @@ final class HistoryService: HistoryServiceProtocol {
     func save(_ item: HistoryItem) async throws {
         try await coreDataStack.performBackground { context in
 
-            // Recipient を upsert
-            let recipientRequest = NSFetchRequest<NSManagedObject>(entityName: "RecipientEntity")
-            recipientRequest.predicate = NSPredicate(format: "email == %@", item.recipientEmail)
-            let existingRecipient = try context.fetch(recipientRequest).first
-
-            let recipientId: UUID
-            if let existing = existingRecipient {
-                guard let id = existing.value(forKey: "id") as? UUID else {
-                    throw SecureZipError.coreDataError(
-                        underlying: NSError(
-                            domain: "HistoryService",
-                            code: 1,
-                            userInfo: [NSLocalizedDescriptionKey: "RecipientEntity の id が UUID にキャストできません（データ破損の可能性）"]
-                        )
-                    )
-                }
-                recipientId = id
-                existing.setValue(Date(), forKey: "updatedAt")
-            } else {
-                let newRecipient = NSManagedObject(
-                    entity: context.persistentStoreCoordinator!.managedObjectModel
-                        .entitiesByName["RecipientEntity"]!,
-                    insertInto: context
-                )
-                recipientId = UUID()
-                newRecipient.setValue(recipientId, forKey: "id")
-                newRecipient.setValue(item.recipientEmail, forKey: "email")
-                newRecipient.setValue(Date(), forKey: "createdAt")
-                newRecipient.setValue(Date(), forKey: "updatedAt")
-            }
-
-            // SendHistory を保存
-            let historyObj = NSManagedObject(
-                entity: context.persistentStoreCoordinator!.managedObjectModel
-                    .entitiesByName["SendHistoryEntity"]!,
-                insertInto: context
+            // SendHistory を保存（recipientEmail を直接保持する非正規化設計）
+            let historyObj = NSEntityDescription.insertNewObject(
+                forEntityName: "SendHistoryEntity", into: context
             )
             historyObj.setValue(item.id, forKey: "id")
-            historyObj.setValue(recipientId, forKey: "recipientId")
+            historyObj.setValue(item.id, forKey: "recipientId")  // スキーマ互換用（未使用）
             historyObj.setValue(item.recipientEmail, forKey: "recipientEmail")
             historyObj.setValue(item.fileName, forKey: "fileName")
             historyObj.setValue(

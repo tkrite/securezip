@@ -28,6 +28,7 @@ final class GmailService: GmailServiceProtocol {
 
     static let gmailSendScope = "https://www.googleapis.com/auth/gmail.send"
     static let maxAttachmentBytes: Int64 = 25 * 1024 * 1024  // 25MB
+    static let passwordEmailDelayNanoseconds: UInt64 = 3_000_000_000  // 3秒
 
     private let apiClient: GmailAPIClient
     private let keychainService: KeychainServiceProtocol
@@ -50,11 +51,14 @@ final class GmailService: GmailServiceProtocol {
                     continuation.resume(throwing: SecureZipError.gmailNotAuthenticated)
                     return
                 }
+                var resumed = false
                 GIDSignIn.sharedInstance.signIn(
                     withPresenting: window,
                     hint: nil,
                     additionalScopes: [Self.gmailSendScope]
                 ) { result, error in
+                    guard !resumed else { return }
+                    resumed = true
                     if let error = error {
                         continuation.resume(throwing: error)
                     } else {
@@ -102,7 +106,7 @@ final class GmailService: GmailServiceProtocol {
 
         // 2. パスワード別送が有効な場合のみ、数秒後にパスワード通知メールを送信
         guard separatePassword else { return }
-        try await Task.sleep(nanoseconds: 3_000_000_000)
+        try await Task.sleep(nanoseconds: Self.passwordEmailDelayNanoseconds)
         let passwordSubject = "【パスワード通知】\(subject)"
         let passwordBody = "先ほど送付したファイルのパスワードは以下の通りです。\n\nパスワード: \(password)\n\n※このメールは自動送信されています。"
         try await apiClient.sendEmail(

@@ -45,7 +45,7 @@ final class PasswordService: PasswordServiceProtocol {
 
         // rejection sampling: モジュロバイアスを除去するため
         // 256 が charsetCount で割り切れない場合、末尾の余り分のバイトを棄却して再抽選する
-        let acceptLimit = UInt8((256 / charsetCount) * charsetCount)
+        let acceptLimit = (256 / charsetCount) * charsetCount
 
         var result: [Character] = []
         result.reserveCapacity(length)
@@ -59,7 +59,7 @@ final class PasswordService: PasswordServiceProtocol {
                 continue
             }
             // acceptLimit 未満のバイトのみ採用（均等分布を保証）
-            if byte < acceptLimit {
+            if Int(byte) < acceptLimit {
                 result.append(charsetArray[Int(byte) % charsetCount])
             }
         }

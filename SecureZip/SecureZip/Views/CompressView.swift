@@ -115,7 +115,6 @@ struct CompressView: View {
 
     // MARK: - Private
 
-    @MainActor
     private func openSavePanel() {
         let panel = NSSavePanel()
         panel.nameFieldStringValue = "archive.\(vm.format.fileExtension)"

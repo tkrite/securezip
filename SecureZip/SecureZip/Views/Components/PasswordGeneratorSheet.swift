@@ -68,7 +68,16 @@ struct PasswordGeneratorSheet: View {
         }
         .padding()
         .frame(width: 360)
-        .onAppear { generate() }
+        .onAppear {
+            // 設定画面のパスワード生成設定を引き継ぐ
+            let ud = UserDefaults.standard
+            length           = ud.object(forKey: SettingsViewModel.UDKey.passwordLength) as? Int ?? 16
+            includeUppercase = ud.object(forKey: SettingsViewModel.UDKey.includeUppercase) as? Bool ?? true
+            includeLowercase = ud.object(forKey: SettingsViewModel.UDKey.includeLowercase) as? Bool ?? true
+            includeNumbers   = ud.object(forKey: SettingsViewModel.UDKey.includeNumbers) as? Bool ?? true
+            includeSymbols   = ud.object(forKey: SettingsViewModel.UDKey.includeSymbols) as? Bool ?? true
+            generate()
+        }
     }
 
     private func generate() {

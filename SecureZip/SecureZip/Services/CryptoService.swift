@@ -11,7 +11,6 @@ final class CryptoService {
 
     /// Curve25519 鍵ペアを生成する（Phase 4）
     func generateKeyPair() -> (privateKey: Curve25519.KeyAgreement.PrivateKey, publicKey: Curve25519.KeyAgreement.PublicKey) {
-        let privateKey = Curve25519.KeyAgreement.PrivateKey()
-        return (privateKey, privateKey.publicKey)
+        CryptoKitWrapper.generateCurve25519KeyPair()
     }
 }

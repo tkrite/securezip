@@ -21,10 +21,15 @@ struct DecompressView: View {
                 // ファイル選択
                 GroupBox("解凍するファイルを選択") {
                     HStack {
-                        Text(vm.selectedFile?.lastPathComponent ?? "ファイルが選択されていません")
-                            .foregroundStyle(vm.selectedFile == nil ? .secondary : .primary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
+                        if let filename = vm.selectedFile?.lastPathComponent {
+                            Text(filename)
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        } else {
+                            Text("ファイルが選択されていません")
+                                .foregroundStyle(.secondary)
+                        }
                         Spacer()
                         Button("選択...") { openFilePicker() }
                     }

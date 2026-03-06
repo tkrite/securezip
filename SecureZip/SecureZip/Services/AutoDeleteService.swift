@@ -16,16 +16,22 @@ final class AutoDeleteService {
     /// 自動削除スケジューラーを開始する（アプリ起動時に呼び出す）
     func startScheduler() {
         // アプリ起動時に即時チェック
-        Task { try? await historyService.deleteExpired() }
+        Task { try? await deleteIfEnabled() }
 
         // 1 時間ごとに期限切れ履歴を削除（構造化並行性でメインスレッド非依存）
         schedulerTask = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: Self.checkIntervalNanoseconds)
                 guard !Task.isCancelled else { break }
-                try? await historyService.deleteExpired()
+                try? await deleteIfEnabled()
             }
         }
+    }
+
+    private func deleteIfEnabled() async throws {
+        let isEnabled = UserDefaults.standard.object(forKey: SettingsViewModel.UDKey.isAutoDeleteEnabled) as? Bool ?? true
+        guard isEnabled else { return }
+        try await historyService.deleteExpired()
     }
 
     func stopScheduler() {
@@ -33,5 +39,4 @@ final class AutoDeleteService {
         schedulerTask = nil
     }
 
-    deinit { schedulerTask?.cancel() }
 }

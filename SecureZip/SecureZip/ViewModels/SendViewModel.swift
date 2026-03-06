@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+@MainActor
 final class SendViewModel: ObservableObject {
 
     // MARK: - State
@@ -34,6 +35,10 @@ final class SendViewModel: ObservableObject {
         self.compressionService = compressionService
         self.passwordService = passwordService
         self.historyService = historyService
+
+        let ud = UserDefaults.standard
+        self.cancelDelaySeconds = ud.object(forKey: SettingsViewModel.UDKey.cancelDelaySeconds) as? Int ?? 5
+        self.isSeparatePasswordEnabled = ud.object(forKey: SettingsViewModel.UDKey.separatePasswordByDefault) as? Bool ?? true
     }
 
     var isGmailAuthenticated: Bool { gmailService.isAuthenticated }
@@ -83,7 +88,10 @@ final class SendViewModel: ObservableObject {
             defer { try? FileManager.default.removeItem(at: archiveURL) }
 
             do {
-                // 送信前に ZIP 圧縮（パスワードがあれば AES-256 暗号化）
+                _ = file.startAccessingSecurityScopedResource()
+            defer { file.stopAccessingSecurityScopedResource() }
+
+            // 送信前に ZIP 圧縮（パスワードがあれば AES-256 暗号化）
                 try await compressionService.compress(
                     sources: [file],
                     destination: archiveURL,
@@ -116,13 +124,17 @@ final class SendViewModel: ObservableObject {
                     format: .zip,
                     isEncrypted: !password.isEmpty,
                     sentAt: Date(),
-                    expiresAt: Calendar.current.date(byAdding: .day, value: 30, to: Date()),
+                    expiresAt: Calendar.current.date(byAdding: .day, value: UserDefaults.standard.object(forKey: SettingsViewModel.UDKey.autoDeleteDays) as? Int ?? 30, to: Date()),
                     status: .sent,
                     createdAt: Date()
                 )
                 try? await historyService.save(historyItem)
             } catch is CancellationError {
-                await MainActor.run { isSending = false }
+                await MainActor.run {
+                    isSending = false
+                    isCountingDown = false
+                    countdown = 0
+                }
             } catch {
                 await MainActor.run {
                     isSending = false

@@ -92,25 +92,27 @@ enum SecureZipError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .encryptionNotSupported(let format):
-            return "暗号化は\(format.displayName)形式では利用できません。ZIP形式を選択してください。"
+            return String(format: NSLocalizedString("error.encryptionNotSupported", comment: ""), format.displayName)
         case .passwordTooWeak:
-            return "パスワードが短すぎます。8文字以上のパスワードを設定してください。"
+            return NSLocalizedString("error.passwordTooWeak", comment: "")
         case .gmailNotAuthenticated:
-            return "Gmailと連携されていません。設定画面から連携してください。"
+            return NSLocalizedString("error.gmailNotAuthenticated", comment: "")
         case .gmailSendFailed(let code, let msg):
-            return "メール送信に失敗しました (HTTP \(code)): \(msg)"
+            return String(format: NSLocalizedString("error.gmailSendFailed", comment: ""), code, msg)
         case .fileTooLarge(let size, let limit):
-            return "ファイルサイズ(\(ByteCountFormatter.string(fromByteCount: size, countStyle: .file)))がGmail上限(\(ByteCountFormatter.string(fromByteCount: limit, countStyle: .file)))を超えています。"
+            return String(format: NSLocalizedString("error.fileTooLarge", comment: ""),
+                          ByteCountFormatter.string(fromByteCount: size, countStyle: .file),
+                          ByteCountFormatter.string(fromByteCount: limit, countStyle: .file))
         case .fileAccessDenied(let url):
-            return "ファイルへのアクセスが拒否されました: \(url.lastPathComponent)"
+            return String(format: NSLocalizedString("error.fileAccessDenied", comment: ""), url.lastPathComponent)
         case .keychainError(let status):
-            return "Keychainエラーが発生しました (status: \(status))"
+            return String(format: NSLocalizedString("error.keychainError", comment: ""), status)
         case .coreDataError(let err):
-            return "データ保存エラー: \(err.localizedDescription)"
+            return String(format: NSLocalizedString("error.coreDataError", comment: ""), err.localizedDescription)
         case .compressionFailed(let err):
-            return "圧縮処理に失敗しました: \(err.localizedDescription)"
+            return String(format: NSLocalizedString("error.compressionFailed", comment: ""), err.localizedDescription)
         case .decompressionFailed(let err):
-            return "解凍処理に失敗しました: \(err.localizedDescription)"
+            return String(format: NSLocalizedString("error.decompressionFailed", comment: ""), err.localizedDescription)
         }
     }
 }

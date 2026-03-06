@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+@MainActor
 final class DecompressViewModel: ObservableObject {
 
     @Published var selectedFile: URL?
@@ -16,7 +17,6 @@ final class DecompressViewModel: ObservableObject {
         self.compressionService = compressionService
     }
 
-    @MainActor
     func decompress(destination: URL) async {
         guard let source = selectedFile else { return }
         isDecompressing = true
@@ -24,13 +24,16 @@ final class DecompressViewModel: ObservableObject {
         errorMessage = nil
         isCompleted = false
 
+        _ = source.startAccessingSecurityScopedResource()
+        defer { source.stopAccessingSecurityScopedResource() }
+
         do {
             try await compressionService.decompress(
                 source: source,
                 destination: destination,
                 password: password.isEmpty ? nil : password
             ) { [weak self] p in
-                Task { @MainActor in self?.progress = p }
+                Task { @MainActor [weak self] in self?.progress = p }
             }
             isCompleted = true
         } catch {

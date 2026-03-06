@@ -122,8 +122,17 @@ final class LibArchiveWrapper {
 
         if let pw = password, !pw.isEmpty {
             archive_write_set_passphrase(archive, pw)
-            // ARCHIVE_WARN (-20) は警告のみ → AES-256 非サポート時は ZipCrypto にフォールバック
-            _ = archive_write_set_options(archive, "zip:encryption=aes256")
+            let optResult = archive_write_set_options(archive, "zip:encryption=aes256")
+            if optResult != ARCHIVE_OK {
+                // ARCHIVE_WARN(-20) = AES-256 非サポート → ZipCrypto へのフォールバックを防ぐためエラーにする
+                throw SecureZipError.compressionFailed(
+                    underlying: NSError(
+                        domain: "LibArchive",
+                        code: Int(optResult),
+                        userInfo: [NSLocalizedDescriptionKey: "AES-256 暗号化を設定できませんでした。システム libarchive がこのオプションをサポートしていない可能性があります。"]
+                    )
+                )
+            }
         }
 
         guard archive_write_open_filename(archive, destination.path) == ARCHIVE_OK else {
@@ -222,6 +231,28 @@ final class LibArchiveWrapper {
         password: String?,
         progress: @escaping @Sendable (Double) -> Void
     ) throws {
+        // 一時ディレクトリに展開し、全エントリ成功後のみ destination に移動する（アトミック展開）
+        // → 途中でエラーが発生しても destination に不完全なファイルが残らない
+        let fm = FileManager.default
+        let tempDir = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try fm.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: tempDir) }
+
+        try performExtract(source: source, destination: tempDir, password: password, progress: progress)
+
+        // 展開成功 → tempDir の内容を destination に移動
+        for item in try fm.contentsOfDirectory(at: tempDir, includingPropertiesForKeys: nil) {
+            let target = destination.appendingPathComponent(item.lastPathComponent)
+            try fm.moveItem(at: item, to: target)
+        }
+    }
+
+    private static func performExtract(
+        source: URL,
+        destination: URL,
+        password: String?,
+        progress: @escaping @Sendable (Double) -> Void
+    ) throws {
         // ZIP ファイルサイズを進捗の分母に使用（取得できない場合は 0 = 進捗不明）
         let totalCompressedSize = (try? source.resourceValues(forKeys: [.fileSizeKey]).fileSize)
             .flatMap { Int64($0) } ?? 0
@@ -259,11 +290,25 @@ final class LibArchiveWrapper {
                 throw SecureZipError.decompressionFailed(underlying: makeArchiveError(archive))
             }
 
-            // 展開先フルパスを設定
+            // 展開先フルパスを設定（ZIP Slip 対策: ".." コンポーネントを除去してパストラバーサルを防ぐ）
             if let e = entry, let currentPath = archive_entry_pathname(e) {
-                let fullPath = destination
-                    .appendingPathComponent(String(cString: currentPath)).path
-                archive_entry_set_pathname(e, fullPath)
+                let entryPath = String(cString: currentPath)
+                let sanitized = entryPath
+                    .components(separatedBy: "/")
+                    .filter { $0 != ".." && $0 != "." && !$0.isEmpty }
+                    .joined(separator: "/")
+                guard !sanitized.isEmpty else { continue }
+                let fullURL = destination.appendingPathComponent(sanitized).standardizedFileURL
+                let destPath = destination.standardizedFileURL.path
+                guard fullURL.path.hasPrefix(destPath + "/") || fullURL.path == destPath else {
+                    throw SecureZipError.decompressionFailed(
+                        underlying: NSError(
+                            domain: "SecureZip", code: -1,
+                            userInfo: [NSLocalizedDescriptionKey: "不正なパスを検出しました: \(sanitized)"]
+                        )
+                    )
+                }
+                archive_entry_set_pathname(e, fullURL.path)
             }
 
             guard archive_write_header(disk, entry) == ARCHIVE_OK else {
@@ -300,7 +345,9 @@ final class LibArchiveWrapper {
         guard archive_read_close(archive) == ARCHIVE_OK else {
             throw SecureZipError.decompressionFailed(underlying: makeArchiveError(archive))
         }
-        archive_write_close(disk)
+        guard archive_write_close(disk) == ARCHIVE_OK else {
+            throw SecureZipError.decompressionFailed(underlying: makeArchiveError(disk))
+        }
 
         progress(1.0)
     }
@@ -393,7 +440,16 @@ final class LibArchiveWrapper {
             args = ["-c\(compressionFlag)f", destination.path]
         }
         args += sources.map { $0.path }
-        try await runProcess(executable: "/usr/bin/tar", arguments: args, progress: progress)
+        // tar はバイト単位の進捗取得が困難なため時間ベースでシミュレートする
+        let progressTask = Task {
+            for step in [0.2, 0.35, 0.5, 0.65, 0.8, 0.9] as [Double] {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                guard !Task.isCancelled else { return }
+                progress(step)
+            }
+        }
+        defer { progressTask.cancel() }
+        try await runProcess(executable: "/usr/bin/tar", arguments: args, progress: { _ in })
         progress(1.0)
     }
 
@@ -405,7 +461,15 @@ final class LibArchiveWrapper {
     ) async throws {
         progress(0.1)
         let args = flags + [source.path, "-C", destination.path]
-        try await runProcess(executable: "/usr/bin/tar", arguments: args, progress: progress)
+        let progressTask = Task {
+            for step in [0.2, 0.35, 0.5, 0.65, 0.8, 0.9] as [Double] {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                guard !Task.isCancelled else { return }
+                progress(step)
+            }
+        }
+        defer { progressTask.cancel() }
+        try await runProcess(executable: "/usr/bin/tar", arguments: args, progress: { _ in })
         progress(1.0)
     }
 

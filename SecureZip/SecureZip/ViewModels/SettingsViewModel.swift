@@ -7,7 +7,7 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - UserDefaults Keys
 
-    private enum UDKey {
+    enum UDKey {
         static let passwordLength           = "settings.passwordLength"
         static let includeUppercase         = "settings.includeUppercase"
         static let includeLowercase         = "settings.includeLowercase"

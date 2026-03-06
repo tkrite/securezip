@@ -4,9 +4,7 @@ import Security
 // MARK: - Keys
 
 /// Keychain に保存するデータのキー定義
-enum KeychainKey: String {
-    case gmailAccessToken  = "com.tkrite.SecureZip.gmail.accessToken"
-    case gmailRefreshToken = "com.tkrite.SecureZip.gmail.refreshToken"
+enum KeychainKey {
     /// パスワードは "com.tkrite.SecureZip.password." + historyID で保存
     static let passwordPrefix = "com.tkrite.SecureZip.password."
 }
@@ -26,7 +24,8 @@ protocol KeychainServiceProtocol: Sendable {
 
 /// Keychain Services のラッパーサービス
 ///
-/// パスワード・OAuth トークンをセキュアに保管する。
+/// 送付パスワードをセキュアに保管する。
+/// OAuth トークンは GIDSignIn SDK が管理するため、このサービスでは扱わない。
 /// kSecAttrAccessibleWhenUnlockedThisDeviceOnly を使用し、iCloud 同期を無効化する。
 final class KeychainService: KeychainServiceProtocol, @unchecked Sendable {
 
