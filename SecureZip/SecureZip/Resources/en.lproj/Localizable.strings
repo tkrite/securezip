@@ -1,0 +1,104 @@
+/* ===== SecureZip Localizable.strings (en) ===== */
+
+/* Sidebar */
+"圧縮" = "Compress";
+"解凍" = "Decompress";
+"送信" = "Send";
+"履歴" = "History";
+"設定" = "Settings";
+"メニューから機能を選択してください" = "Select a feature from the menu";
+
+/* Compress */
+"圧縮形式" = "Format";
+"AES-256 暗号化" = "AES-256 Encryption";
+"暗号化を有効にする" = "Enable Encryption";
+"暗号化は ZIP 形式のみ対応しています" = "Encryption is only available for ZIP format";
+"パスワード" = "Password";
+"自動生成" = "Auto Generate";
+"圧縮する" = "Compress";
+"Finder で表示" = "Show in Finder";
+
+/* Decompress */
+"解凍するファイルを選択" = "Select File to Decompress";
+"パスワード（暗号化ファイルの場合）" = "Password (if encrypted)";
+"パスワード（任意）" = "Password (optional)";
+"解凍する" = "Decompress";
+"解凍が完了しました" = "Decompression Complete";
+
+/* Send */
+"Gmail 連携が必要です" = "Gmail Connection Required";
+"設定画面から Gmail と連携してください。" = "Please connect your Gmail account in Settings.";
+"送付先" = "Recipient";
+"メールアドレス" = "Email Address";
+"添付ファイル" = "Attachment";
+"ファイルが選択されていません" = "No file selected";
+"選択..." = "Select...";
+"暗号化パスワード" = "Encryption Password";
+"生成" = "Generate";
+"件名・本文" = "Subject & Body";
+"件名" = "Subject";
+"オプション" = "Options";
+"パスワードを別メールで送付する" = "Send password in a separate email";
+"送信する" = "Send";
+"送信が完了しました" = "Sent Successfully";
+
+/* Countdown */
+"送信中..." = "Sending...";
+"キャンセルするには下のボタンを押してください" = "Press the button below to cancel";
+"キャンセル" = "Cancel";
+
+/* Drop Zone */
+"ファイルをドロップ、または" = "Drop files here, or";
+"ファイルを選択..." = "Select Files...";
+"クリア" = "Clear";
+
+/* History */
+"送付履歴はありません" = "No Send History";
+"ファイルを送付すると履歴が表示されます。" = "Your send history will appear here.";
+"送付先・ファイル名で検索" = "Search by recipient or filename";
+
+/* Settings */
+"Gmail 連携" = "Gmail";
+"接続済み" = "Connected";
+"連携解除" = "Disconnect";
+"Gmail と連携する" = "Connect Gmail";
+"パスワード生成" = "Password Generation";
+"文字数: %lld" = "Length: %lld";
+"大文字を含む" = "Include Uppercase";
+"小文字を含む" = "Include Lowercase";
+"数字を含む" = "Include Numbers";
+"記号を含む" = "Include Symbols";
+"送信設定" = "Send Settings";
+"キャンセル猶予: %lld秒" = "Cancel Delay: %lld sec";
+"デフォルトでパスワードを別送する" = "Send password separately by default";
+"圧縮後の元ファイル" = "Original Files After Compression";
+"処理方法" = "Action";
+"保持する" = "Keep";
+"ゴミ箱に移動" = "Move to Trash";
+"完全削除" = "Delete Permanently";
+"履歴の自動削除" = "Auto-Delete History";
+"自動削除を有効にする" = "Enable Auto-Delete";
+"保存期間: %lld日" = "Retention: %lld days";
+
+/* Error Messages */
+"error.encryptionNotSupported" = "Encryption is not available for %@ format. Please select ZIP format.";
+"error.passwordTooWeak" = "Password is too short. Please set a password of at least 8 characters.";
+"error.gmailNotAuthenticated" = "Gmail is not connected. Please connect in Settings.";
+"error.gmailSendFailed" = "Failed to send email (HTTP %d): %@";
+"error.fileTooLarge" = "File size (%@) exceeds the Gmail limit (%@).";
+"error.fileAccessDenied" = "Access denied to file: %@";
+"error.keychainError" = "Keychain error (status: %d)";
+"error.coreDataError" = "Data save error: %@";
+"error.compressionFailed" = "Compression failed: %@";
+"error.decompressionFailed" = "Decompression failed: %@";
+
+/* Password Generator */
+"生成設定" = "Generator Settings";
+"大文字 (A-Z)" = "Uppercase (A-Z)";
+"小文字 (a-z)" = "Lowercase (a-z)";
+"数字 (0-9)" = "Numbers (0-9)";
+"記号 (!@#...)" = "Symbols (!@#...)";
+"生成されたパスワード" = "Generated Password";
+"コピー" = "Copy";
+"再生成" = "Regenerate";
+"適用" = "Apply";
