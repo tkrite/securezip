@@ -183,13 +183,15 @@ MVVM（Model-View-ViewModel）パターンを採用する。SwiftUIの`@Observab
 
 #### 4.2.1 データモデル設計
 
-Core Dataを使用し、送付履歴と送付先情報を管理する。パスワード・トークンなどの機密情報はCore Dataに保存せず、Keychain Servicesに保管する。
+Core Dataを使用し、送付履歴と送付先情報を管理する。アプリ設定はUserDefaultsで管理する。パスワード・トークンなどの機密情報はCore DataおよびUserDefaultsに保存せず、Keychain Servicesに保管する。
 
 ```
 Core Data Model
 ├── SendHistory（送付履歴）
-├── Recipient（送付先）
-└── AppSettings（アプリ設定）
+└── Recipient（送付先）
+
+UserDefaults
+└── アプリ設定（キャンセル秒数・パスワード生成設定・自動削除設定等）
 
 Keychain Services
 ├── Gmail OAuth Access Token
@@ -214,14 +216,6 @@ Keychain Services
                                 │ createdAt    │
                                 └─────────────┘
 
-┌─────────────┐
-│ AppSettings │
-│             │
-│ id (UUID)   │
-│ key         │
-│ value       │
-│ updatedAt   │
-└─────────────┘
 ```
 
 #### 4.2.3 データ詳細仕様
@@ -250,14 +244,6 @@ Keychain Services
 | createdAt | Date | ○ | Date() | - | 作成日時 |
 | updatedAt | Date | ○ | Date() | - | 更新日時 |
 
-##### AppSettings（アプリ設定）
-| カラム名 | データ型 | 必須 | デフォルト値 | 制約 | 説明 |
-|----------|----------|------|--------------|------|------|
-| id | UUID | ○ | UUID() | Primary Key | 一意識別子 |
-| key | String | ○ | - | Unique | 設定キー |
-| value | String | ○ | - | - | 設定値（JSON文字列） |
-| updatedAt | Date | ○ | Date() | - | 更新日時 |
-
 #### 4.2.4 インデックス設計
 | テーブル名 | インデックス名 | カラム | 種類 | 目的 |
 |------------|----------------|--------|------|------|
@@ -265,7 +251,6 @@ Keychain Services
 | SendHistory | idx_history_expiresAt | expiresAt | INDEX | 自動削除対象の効率的な取得 |
 | SendHistory | idx_history_recipientId | recipientId | INDEX | 送付先別履歴検索 |
 | Recipient | idx_recipient_email | email | UNIQUE | メールアドレスの一意性保証・検索高速化 |
-| AppSettings | idx_settings_key | key | UNIQUE | 設定キーの一意性保証・検索高速化 |
 
 ### 4.3 API設計
 
@@ -647,10 +632,8 @@ class SendHistoryRepository: SendHistoryRepositoryProtocol {
 #### 6.2.2 Keychain保存設計
 ```swift
 // Keychainに保存するデータのキー定義
-enum KeychainKey: String {
-    case gmailAccessToken = "com.securezip.gmail.accessToken"
-    case gmailRefreshToken = "com.securezip.gmail.refreshToken"
-    case passwordPrefix = "com.securezip.password."  // + historyID
+enum KeychainKey {
+    static let passwordPrefix = "com.tkrite.SecureZip.password."  // + historyID
 }
 
 // Keychainアクセス属性
@@ -901,7 +884,7 @@ App Store経由の配布を行う。Xcode Cloud または手動によるArchive 
 #### 12.1.1 アプリ設定項目
 | 設定キー | データ型 | デフォルト値 | 説明 |
 |----------|----------|--------------|------|
-| `cancelDelaySeconds` | Int | 5 | 送信キャンセル猶予秒数 |
+| `cancelDelaySeconds` | Int | 5 | 送信キャンセル猶予秒数（1〜10秒） |
 | `defaultFormat` | String | "zip" | デフォルト圧縮形式 |
 | `passwordLength` | Int | 16 | 自動生成パスワードの文字数 |
 | `passwordIncludeUppercase` | Bool | true | パスワードに大文字を含む |
@@ -914,7 +897,7 @@ App Store経由の配布を行う。Xcode Cloud または手動によるArchive 
 | `postCompressionAction` | String | "keep" | 圧縮後の元ファイル処理（keep / move / delete） |
 
 #### 12.1.2 設定の保存先
-- ユーザー設定: Core Data（AppSettingsエンティティ）
+- ユーザー設定: UserDefaults（`settings.*` プレフィックスのキーで管理）
 - 機密設定（トークン等）: Keychain Services
 
 ### 12.2 シークレット管理
