@@ -54,7 +54,7 @@ struct HistoryView: View {
                     }
                     .onDelete { indexSet in
                         let ids = indexSet.map { vm.filteredItems[$0].id }
-                        Task { for id in ids { await vm.deleteItem(id: id) } }
+                        Task { await vm.deleteItems(ids: ids) }
                     }
                 }
                 .searchable(text: $vm.searchText, prompt: "送付先・ファイル名で検索")

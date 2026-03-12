@@ -114,6 +114,7 @@ final class SendViewModel: ObservableObject {
                 await MainActor.run {
                     isSending = false
                     isCompleted = true
+                    password = ""
                 }
                 // 送信成功後に履歴を保存（失敗しても送信完了扱いとする）
                 let fileSize = (try? archiveURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).flatMap { Int64($0) } ?? 0
@@ -136,6 +137,7 @@ final class SendViewModel: ObservableObject {
                     isSending = false
                     isCountingDown = false
                     countdown = 0
+                    password = ""
                 }
             } catch {
                 await MainActor.run {

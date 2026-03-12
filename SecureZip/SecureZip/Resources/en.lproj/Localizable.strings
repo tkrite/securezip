@@ -25,6 +25,10 @@
 "解凍する" = "Decompress";
 "解凍が完了しました" = "Decompression Complete";
 
+/* Password Notification Email */
+"password.email.subject" = "[Password Notice] %@";
+"password.email.body" = "The password for the file you just received is as follows.\n\nPassword: %@\n\nThis email was sent automatically.";
+
 /* Send */
 "Gmail 連携が必要です" = "Gmail Connection Required";
 "設定画面から Gmail と連携してください。" = "Please connect your Gmail account in Settings.";
@@ -79,6 +83,11 @@
 "履歴の自動削除" = "Auto-Delete History";
 "自動削除を有効にする" = "Enable Auto-Delete";
 "保存期間: %lld日" = "Retention: %lld days";
+
+/* CoreData Fallback Alert */
+"coredata.fallback.title" = "Data Load Error";
+"coredata.fallback.message" = "Failed to load send history. The app is running in temporary mode. History from this session will be lost when the app is closed.";
+"coredata.fallback.ok" = "OK";
 
 /* Error Messages */
 "error.encryptionNotSupported" = "Encryption is not available for %@ format. Please select ZIP format.";

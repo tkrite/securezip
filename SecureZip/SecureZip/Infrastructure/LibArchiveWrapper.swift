@@ -456,12 +456,64 @@ final class LibArchiveWrapper {
         progress(1.0)
     }
 
+    /// TAR アーカイブのエントリパスを事前検証する（ZIP Slip 対策）
+    ///
+    /// libarchive でエントリを列挙し、展開先ディレクトリの外を指すパスが
+    /// 含まれている場合はエラーをスローする。検証のみ行い展開はしない。
+    private func validateTarPaths(source: URL, destination: URL) throws {
+        guard let archive = archive_read_new() else {
+            throw SecureZipError.decompressionFailed(underlying: Self.makeArchiveError(nil))
+        }
+        defer { archive_read_free(archive) }
+
+        archive_read_support_format_tar(archive)
+        archive_read_support_filter_gzip(archive)
+        archive_read_support_filter_bzip2(archive)
+        archive_read_support_filter_zstd(archive)
+        archive_read_support_filter_none(archive)
+
+        guard archive_read_open_filename(archive, source.path, Int(Self.blockSize)) == ARCHIVE_OK else {
+            throw SecureZipError.decompressionFailed(underlying: Self.makeArchiveError(archive))
+        }
+
+        let destPath = destination.standardizedFileURL.path
+        var entry: OpaquePointer?
+
+        while true {
+            let r = archive_read_next_header(archive, &entry)
+            if r == ARCHIVE_EOF { break }
+            if r < ARCHIVE_OK {
+                throw SecureZipError.decompressionFailed(underlying: Self.makeArchiveError(archive))
+            }
+            guard let e = entry, let rawPath = archive_entry_pathname(e) else { continue }
+
+            let entryPath = String(cString: rawPath)
+            let sanitized = entryPath
+                .components(separatedBy: "/")
+                .filter { $0 != ".." && $0 != "." && !$0.isEmpty }
+                .joined(separator: "/")
+            guard !sanitized.isEmpty else { continue }
+
+            let fullURL = destination.appendingPathComponent(sanitized).standardizedFileURL
+            guard fullURL.path.hasPrefix(destPath + "/") || fullURL.path == destPath else {
+                throw SecureZipError.decompressionFailed(
+                    underlying: NSError(
+                        domain: "SecureZip", code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "不正なパスを検出しました: \(sanitized)"]
+                    )
+                )
+            }
+        }
+    }
+
     private func decompressTar(
         source: URL,
         destination: URL,
         flags: [String],
         progress: @escaping @Sendable (Double) -> Void
     ) async throws {
+        // ZIP Slip 対策：実行前にアーカイブエントリのパスを検証
+        try validateTarPaths(source: source, destination: destination)
         progress(0.1)
         let args = flags + [source.path, "-C", destination.path]
         let progressTask = Task {
