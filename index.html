@@ -30,8 +30,8 @@
   </style>
   <script>
     function showLang(lang) {
-      document.querySelectorAll('.ja').forEach(el => el.style.display = lang === 'ja' ? '' : 'none');
-      document.querySelectorAll('.en').forEach(el => el.style.display = lang === 'en' ? '' : 'none');
+      document.querySelectorAll('.ja').forEach(el => el.style.display = lang === 'ja' ? 'block' : 'none');
+      document.querySelectorAll('.en').forEach(el => el.style.display = lang === 'en' ? 'block' : 'none');
     }
     window.onload = function() {
       var userLang = navigator.language || 'ja';
