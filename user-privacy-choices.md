@@ -1,7 +1,7 @@
 ---
 layout: page
-title: User Privacy Choices / ユーザープライバシー選択
-description: "SmooZip のプライバシー設定と選択肢 / Privacy choices and settings for SmooZip"
+title: ユーザープライバシー選択
+description: "プライバシーに関する設定と選択肢についてご確認いただけます。"
 permalink: /user-privacy-choices/
 last_updated: "2026年4月21日"
 ---
@@ -12,9 +12,13 @@ last_updated: "2026年4月21日"
 </div>
 
 <script>
+var pageTitles = { ja: 'ユーザープライバシー選択', en: 'User Privacy Choices' };
 function showLang(lang) {
   document.querySelectorAll('.lang-ja').forEach(function(el){ el.style.display = lang === 'ja' ? 'block' : 'none'; });
   document.querySelectorAll('.lang-en').forEach(function(el){ el.style.display = lang === 'en' ? 'block' : 'none'; });
+  var h1 = document.querySelector('.page-title');
+  if (h1) h1.textContent = pageTitles[lang];
+  document.title = pageTitles[lang] + ' | {{ site.app.name }}';
 }
 window.addEventListener('load', function() {
   var userLang = navigator.language || 'ja';
@@ -26,9 +30,6 @@ window.addEventListener('load', function() {
 <!-- 日本語 -->
 <!-- ============================================================ -->
 <div class="lang-ja">
-
-<h1>ユーザープライバシー選択</h1>
-<p style="color:#6e6e73;font-size:0.9em;margin-bottom:32px;">最終更新日：2026年4月21日</p>
 
 <p>{{ site.app.name }} では、ユーザーのプライバシーを尊重し、データの取り扱いについて透明性を確保しています。以下に、ユーザーが選択・管理できるプライバシー設定についてご説明します。</p>
 
@@ -73,9 +74,6 @@ window.addEventListener('load', function() {
 <!-- English -->
 <!-- ============================================================ -->
 <div class="lang-en" style="display:none;">
-
-<h1>User Privacy Choices</h1>
-<p style="color:#6e6e73;font-size:0.9em;margin-bottom:32px;">Last updated: April 21, 2026</p>
 
 <p>{{ site.app.name }} is committed to respecting your privacy and being transparent about how your data is handled. Below you will find the privacy settings and choices available to you.</p>
 
