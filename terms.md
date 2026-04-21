@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Terms of Service / 利用規約
-description: "SmooZip の利用規約 / Terms of Service for SmooZip"
+title: 利用規約
+description: "SmooZip の利用規約についてご確認いただけます。"
 permalink: /terms/
 last_updated: "2026年4月7日"
 ---
@@ -12,9 +12,13 @@ last_updated: "2026年4月7日"
 </div>
 
 <script>
+var pageTitles = { ja: '利用規約', en: 'Terms of Service' };
 function showLang(lang) {
   document.querySelectorAll('.lang-ja').forEach(function(el){ el.style.display = lang === 'ja' ? 'block' : 'none'; });
   document.querySelectorAll('.lang-en').forEach(function(el){ el.style.display = lang === 'en' ? 'block' : 'none'; });
+  var h1 = document.querySelector('.page-title');
+  if (h1) h1.textContent = pageTitles[lang];
+  document.title = pageTitles[lang] + ' | {{ site.app.name }}';
 }
 window.addEventListener('load', function() {
   var userLang = navigator.language || 'ja';

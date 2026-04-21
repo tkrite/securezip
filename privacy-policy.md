@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Privacy Policy / プライバシーポリシー
-description: "SmooZip のプライバシーポリシー / Privacy Policy for SmooZip"
+title: プライバシーポリシー
+description: "プライバシーに関するデータの取り扱いについてご確認いただけます。"
 permalink: /privacy-policy/
 last_updated: "2026年4月21日"
 ---
@@ -12,9 +12,13 @@ last_updated: "2026年4月21日"
 </div>
 
 <script>
+var pageTitles = { ja: 'プライバシーポリシー', en: 'Privacy Policy' };
 function showLang(lang) {
   document.querySelectorAll('.lang-ja').forEach(function(el){ el.style.display = lang === 'ja' ? 'block' : 'none'; });
   document.querySelectorAll('.lang-en').forEach(function(el){ el.style.display = lang === 'en' ? 'block' : 'none'; });
+  var h1 = document.querySelector('.page-title');
+  if (h1) h1.textContent = pageTitles[lang];
+  document.title = pageTitles[lang] + ' | {{ site.app.name }}';
 }
 window.addEventListener('load', function() {
   var userLang = navigator.language || 'ja';
